@@ -1,0 +1,66 @@
+<!doctype html>
+<html ng-app="App">
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.13/angular.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.1.js"></script>
+  </head>
+  <body>
+
+    <div ng-controller="import">
+      <input type="text" ng-model="deal.name"/>
+      <input type="file" file-model="myFile"/>
+      <input type="button" ng-click="upload()" value="Upload"/>
+    </div>
+  </body>
+  <script>
+
+var app = angular.module('App', []);
+
+app.directive('fileModel', ['$parse', function ($parse) {
+    return {
+        restrict: 'A',
+        link: function(scope, element, attrs) {
+            var model = $parse(attrs.fileModel);
+            var modelSetter = model.assign;
+            
+            element.bind('change', function(){
+                scope.$apply(function(){
+                    modelSetter(scope, element[0].files[0]);
+                });
+            });
+        }
+    };
+}]);
+
+app.service('FileUpload', ['$http', function ($http) {
+    this.uploadFileToUrl = function(deal, uploadUrl){alert(deal.name);
+        var fd = new FormData();
+        fd.append('file', deal.file);
+        fd.append('name', deal.name);
+        $http.post(uploadUrl, fd, {
+            transformRequest: angular.identity,
+            headers: {'Content-Type': undefined}
+        })
+        .success(function(){
+        })
+        .error(function(){
+        });
+    }
+}]);
+
+app.controller("import", ["$scope", "$http", "FileUpload",
+    function ($scope, $http, FileUpload) {
+        $scope.upload = function() {
+            var uploadUrl = 'http://localhost:4000/';
+
+            var deal = {
+                file: $scope.myFile,
+                name: $scope.deal.name
+            }
+            FileUpload.uploadFileToUrl(deal, uploadUrl);
+        };
+    }
+]);
+
+  </script>
+</html>
